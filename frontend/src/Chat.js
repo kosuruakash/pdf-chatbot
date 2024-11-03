@@ -1,25 +1,22 @@
-// Chat.js
 import React, { useState } from 'react';
 
-function Chat() {
+const Chat = () => {
   const [question, setQuestion] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
-  const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [pendingQuestion, setPendingQuestion] = useState('');
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
 
   const handleAsk = async () => {
     if (!question.trim()) return;
 
     try {
-      const response = await fetch(`/ask?question=${encodeURIComponent(question)}`);
+      const response = await fetch(`https://pdf-chatbotbackend.onrender.com/ask?question=${encodeURIComponent(question)}`);
       const result = await response.json();
 
       if (result.answer === "Answer is not available in the context.") {
-        // Store the question and show the permission modal
         setPendingQuestion(question);
         setShowPermissionModal(true);
       } else {
-        // Add the answer to the chat history if it's found
         setChatHistory((prev) => [
           ...prev,
           { role: 'user', content: question },
@@ -38,8 +35,7 @@ function Chat() {
 
     if (permissionGranted) {
       try {
-        // Send request with permission flag to use AI assistance
-        const response = await fetch(`/ask?question=${encodeURIComponent(pendingQuestion)}&permission=true`);
+        const response = await fetch(`https://pdf-chatbotbackend.onrender.com/ask?question=${encodeURIComponent(pendingQuestion)}&permission=true`);
         const result = await response.json();
 
         setChatHistory((prev) => [
@@ -52,7 +48,6 @@ function Chat() {
         alert('Failed to fetch answer with AI.');
       }
     } else {
-      // Add a message indicating AI assistance was declined
       setChatHistory((prev) => [
         ...prev,
         { role: 'user', content: pendingQuestion },
@@ -64,36 +59,30 @@ function Chat() {
   };
 
   return (
-    <div className="chat">
-      <div className="chat-history">
-        {chatHistory.map((msg, index) => (
-          <div key={index} className={`message ${msg.role}`}>
-            <p>{msg.content}</p>
-          </div>
-        ))}
-      </div>
-      <div className="chat-input">
-        <input
-          type="text"
-          placeholder="Ask a question..."
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-        />
-        <button onClick={handleAsk}>Send</button>
-      </div>
+    <div>
+      <input 
+        type="text" 
+        value={question} 
+        onChange={(e) => setQuestion(e.target.value)} 
+        placeholder="Ask a question" 
+      />
+      <button onClick={handleAsk}>Ask</button>
+
+      {chatHistory.map((msg, idx) => (
+        <p key={idx} style={{ color: msg.role === 'user' ? 'blue' : 'green' }}>
+          {msg.role}: {msg.content}
+        </p>
+      ))}
 
       {showPermissionModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <h2>Use AI Assistance</h2>
-            <p>The answer is not available in the document context. Do you want to use AI assistance to answer this question?</p>
-            <button onClick={() => handlePermissionResponse(true)}>Yes, use AI</button>
-            <button onClick={() => handlePermissionResponse(false)}>No, thanks</button>
-          </div>
+        <div>
+          <p>The answer is not found in the document. Allow AI assistance?</p>
+          <button onClick={() => handlePermissionResponse(true)}>Yes</button>
+          <button onClick={() => handlePermissionResponse(false)}>No</button>
         </div>
       )}
     </div>
   );
-}
+};
 
 export default Chat;

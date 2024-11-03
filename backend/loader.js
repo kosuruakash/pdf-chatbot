@@ -1,4 +1,3 @@
-// loader.js
 import { PDFLoader } from 'langchain/document_loaders/fs/pdf';
 import { FaissStore } from 'langchain/vectorstores/faiss';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';

@@ -1,11 +1,10 @@
-// UploadForm.js
 import React, { useState } from 'react';
 
-function UploadForm({ onUploadSuccess }) {
+const UploadForm = ({ onUploadSuccess }) => {
   const [file, setFile] = useState(null);
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+  const handleFileChange = (event) => {
+    setFile(event.target.files[0]);
   };
 
   const handleUpload = async () => {
@@ -14,7 +13,7 @@ function UploadForm({ onUploadSuccess }) {
     formData.append('file', file);
 
     try {
-      const response = await fetch('/upload', {
+      const response = await fetch('https://pdf-chatbotbackend.onrender.com/upload', {
         method: 'POST',
         body: formData,
       });
@@ -31,11 +30,11 @@ function UploadForm({ onUploadSuccess }) {
   };
 
   return (
-    <div className="upload-form">
+    <div>
       <input type="file" onChange={handleFileChange} />
       <button onClick={handleUpload}>Upload PDF</button>
     </div>
   );
-}
+};
 
 export default UploadForm;

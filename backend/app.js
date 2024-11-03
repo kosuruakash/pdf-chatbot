@@ -9,7 +9,6 @@ import { FaissStore } from 'langchain/vectorstores/faiss';
 import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { PromptTemplate } from 'langchain/prompts';
-// New import for Generative AI
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { ingestDocs } from './loader.js'; // Import the document ingestion function
 
@@ -98,12 +97,10 @@ app.get('/ask', async (req, res) => {
     let answer;
 
     if (documents && documents.length > 0) {
-      // Filter and clean up document content
       const nonEmptyDocs = documents.filter(doc => doc.pageContent && doc.pageContent.trim().length > 5);
       const context = nonEmptyDocs.map(doc => doc.pageContent.replace(/(\r\n|\n|\r)/gm, " ").trim()).join(" ");
 
       if (context.trim()) {
-        // Format prompt with context and question
         const formattedPrompt = await prompt.format({ context, question: userQuestion });
         const response = await model.call([{ role: 'user', content: formattedPrompt }]);
         answer = response.content;
