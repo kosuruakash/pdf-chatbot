@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 
-const Chat = () => {
+function Chat() {
   const [question, setQuestion] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
-  const [pendingQuestion, setPendingQuestion] = useState('');
   const [showPermissionModal, setShowPermissionModal] = useState(false);
+  const [pendingQuestion, setPendingQuestion] = useState('');
 
   const handleAsk = async () => {
     if (!question.trim()) return;
@@ -26,7 +26,6 @@ const Chat = () => {
       }
     } catch (error) {
       console.error('Error fetching answer:', error);
-      alert('Error fetching answer.');
     }
   };
 
@@ -45,7 +44,6 @@ const Chat = () => {
         ]);
       } catch (error) {
         console.error('Error fetching answer with AI permission:', error);
-        alert('Failed to fetch answer with AI.');
       }
     } else {
       setChatHistory((prev) => [
@@ -59,30 +57,36 @@ const Chat = () => {
   };
 
   return (
-    <div>
-      <input 
-        type="text" 
-        value={question} 
-        onChange={(e) => setQuestion(e.target.value)} 
-        placeholder="Ask a question" 
-      />
-      <button onClick={handleAsk}>Ask</button>
-
-      {chatHistory.map((msg, idx) => (
-        <p key={idx} style={{ color: msg.role === 'user' ? 'blue' : 'green' }}>
-          {msg.role}: {msg.content}
-        </p>
-      ))}
+    <div className="chat">
+      <div className="chat-history">
+        {chatHistory.map((msg, index) => (
+          <div key={index} className={`message ${msg.role}`}>
+            <p>{msg.content}</p>
+          </div>
+        ))}
+      </div>
+      <div className="chat-input">
+        <input
+          type="text"
+          placeholder="Ask a question..."
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+        />
+        <button onClick={handleAsk}>Send</button>
+      </div>
 
       {showPermissionModal && (
-        <div>
-          <p>The answer is not available in the context. Would you like to use AI to answer this question?</p>
-          <button onClick={() => handlePermissionResponse(true)}>Yes</button>
-          <button onClick={() => handlePermissionResponse(false)}>No</button>
+        <div className="modal">
+          <div className="modal-content">
+            <h2>Use AI Assistance</h2>
+            <p>The answer is not available in the document context. Do you want to use AI assistance to answer this question?</p>
+            <button onClick={() => handlePermissionResponse(true)}>Yes, use AI</button>
+            <button onClick={() => handlePermissionResponse(false)}>No, thanks</button>
+          </div>
         </div>
       )}
     </div>
   );
-};
+}
 
 export default Chat;

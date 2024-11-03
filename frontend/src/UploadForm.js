@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 
-const UploadForm = ({ onUploadSuccess }) => {
+function UploadForm({ onUploadSuccess }) {
   const [file, setFile] = useState(null);
 
-  const handleFileChange = (event) => {
-    setFile(event.target.files[0]);
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
   };
 
   const handleUpload = async () => {
@@ -20,7 +20,7 @@ const UploadForm = ({ onUploadSuccess }) => {
 
       if (response.ok) {
         const result = await response.json();
-        onUploadSuccess(result.filePath);  // Pass uploaded file path to parent
+        onUploadSuccess(result.filePath);
       } else {
         alert('Failed to upload file.');
       }
@@ -30,11 +30,11 @@ const UploadForm = ({ onUploadSuccess }) => {
   };
 
   return (
-    <div>
+    <div className="upload-form">
       <input type="file" onChange={handleFileChange} />
       <button onClick={handleUpload}>Upload PDF</button>
     </div>
   );
-};
+}
 
 export default UploadForm;

@@ -16,6 +16,7 @@ function App() {
         <img src="" alt="logo" />
         <UploadForm onUploadSuccess={handleUploadSuccess} />
       </header>
+      
       {uploadedFilePath && <Chat />}
     </div>
   );

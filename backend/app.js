@@ -1,9 +1,8 @@
-// Import necessary libraries
 import express from 'express';
 import http from 'http';
+import cors from 'cors'
 import { fileURLToPath } from 'url';
 import path, { dirname } from 'path';
-import cors from 'cors'
 import multer from 'multer';
 import dotenv from 'dotenv';
 import { FaissStore } from 'langchain/vectorstores/faiss';
@@ -11,9 +10,8 @@ import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { PromptTemplate } from 'langchain/prompts';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { ingestDocs } from './loader.js'; // Import the document ingestion function
+import { ingestDocs } from './loader.js';
 
-// Load environment variables from .env file
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -22,41 +20,39 @@ const app = express();
 const port = process.env.PORT || 3000;
 const server = http.createServer(app);
 
-// Initialize Generative AI client for fallback
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY); // Replace `API_KEY` if needed
 const corsOptions = {
-  origin: 'https://pdf-chatbot-teal-mu.vercel.app', // Allow this origin
-  methods: ['GET', 'POST'], // Allow specific HTTP methods
-  credentials: true // Allow credentials (cookies, authorization headers, etc.)
+  origin: (origin, callback) => {
+    const allowedOrigins = ['https://pdf-chatbot-teal-mu.vercel.app', 'http://localhost:3000'];
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST'],
+  credentials: true,
 };
+
 
 // Use CORS middleware
 app.use(cors(corsOptions));
 
-// Set up storage for uploaded files
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY);
+
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, 'uploads'));
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname);
-  },
+  destination: (req, file, cb) => cb(null, path.join(__dirname, 'uploads')),
+  filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`),
 });
 const upload = multer({ storage });
 
-// Health check route
 app.get('/api/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Server is healthy',
-  });
+  res.json({ success: true, message: 'Server is healthy' });
 });
 
-// Endpoint to upload PDF files
 app.post('/upload', upload.single('file'), async (req, res) => {
   try {
-    process.env.PDF_PATH = req.file.path; // Save path to PDF for ingestion
-    await ingestDocs(); // Re-index the vector store with the new document
+    process.env.PDF_PATH = req.file.path;
+    await ingestDocs();
     res.json({ filePath: req.file.path });
   } catch (error) {
     console.error('Error during file upload:', error);
@@ -64,7 +60,6 @@ app.post('/upload', upload.single('file'), async (req, res) => {
   }
 });
 
-// Endpoint to ask questions
 app.get('/ask', async (req, res) => {
   try {
     const model = new ChatGoogleGenerativeAI({
@@ -73,9 +68,7 @@ app.get('/ask', async (req, res) => {
       temperature: 0.3,
     });
 
-    // Define prompt template
-    const promptTemplate = `
-      Use the following context to answer the question as accurately as possible.
+    const promptTemplate = `Use the following context to answer the question as accurately as possible.
       Only use information from the context. If the answer is not in the context, respond with, "Answer is not available in the context."
 
       Context: {context}
@@ -89,7 +82,6 @@ app.get('/ask', async (req, res) => {
       inputVariables: ['context', 'question'],
     });
 
-    // Load embeddings and vector store
     const directory = path.join(__dirname, 'faiss_index');
     const embeddings = new GoogleGenerativeAIEmbeddings({
       apiKey: process.env.GOOGLE_GENAI_API_KEY,
@@ -98,9 +90,8 @@ app.get('/ask', async (req, res) => {
     const loadedVectorStore = await FaissStore.load(directory, embeddings);
     const retriever = loadedVectorStore.asRetriever();
 
-    // Retrieve relevant documents based on user question
     const userQuestion = req.query.question || 'How to compile a .tex file to a .pdf file';
-    const permission = req.query.permission === 'true'; // Get permission parameter
+    const permission = req.query.permission === 'true';
     const documents = await retriever.getRelevantDocuments(userQuestion);
 
     let answer;
@@ -108,7 +99,7 @@ app.get('/ask', async (req, res) => {
     if (documents && documents.length > 0) {
       const nonEmptyDocs = documents.filter(doc => doc.pageContent && doc.pageContent.trim().length > 5);
       const context = nonEmptyDocs.map(doc => doc.pageContent.replace(/(\r\n|\n|\r)/gm, " ").trim()).join(" ");
-
+      
       if (context.trim()) {
         const formattedPrompt = await prompt.format({ context, question: userQuestion });
         const response = await model.call([{ role: 'user', content: formattedPrompt }]);
@@ -116,9 +107,7 @@ app.get('/ask', async (req, res) => {
       }
     }
 
-    // If no relevant context is found and permission is granted, use generative AI fallback
     if ((!answer || answer === "Answer is not available in the context.") && permission) {
-      console.log('Using Generative AI fallback...');
       const genModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
       const genResponse = await genModel.generateContent(userQuestion);
       answer = genResponse.response.text();
@@ -133,15 +122,6 @@ app.get('/ask', async (req, res) => {
   }
 });
 
-// Start the server
 server.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
-});
-
-server.on('error', (error) => {
-  if (error.code === 'EADDRINUSE') {
-    console.error(`Port ${port} is already in use`);
-  } else {
-    console.error('Server error:', error);
-  }
 });
