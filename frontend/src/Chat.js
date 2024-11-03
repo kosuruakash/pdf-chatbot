@@ -10,7 +10,7 @@ const Chat = () => {
     if (!question.trim()) return;
 
     try {
-      const response = await fetch(`https://pdf-chatbotbackend.onrender.com/ask?question=${encodeURIComponent(question)}`);
+      const response = await fetch(`https://pdf-chatbot-backend-7kjh.onrender.com/ask?question=${encodeURIComponent(question)}`);
       const result = await response.json();
 
       if (result.answer === "Answer is not available in the context.") {
@@ -35,7 +35,7 @@ const Chat = () => {
 
     if (permissionGranted) {
       try {
-        const response = await fetch(`https://pdf-chatbotbackend.onrender.com/ask?question=${encodeURIComponent(pendingQuestion)}&permission=true`);
+        const response = await fetch(`https://pdf-chatbot-backend-7kjh.onrender.com/ask?question=${encodeURIComponent(pendingQuestion)}&permission=true`);
         const result = await response.json();
 
         setChatHistory((prev) => [
@@ -76,7 +76,7 @@ const Chat = () => {
 
       {showPermissionModal && (
         <div>
-          <p>The answer is not found in the document. Allow AI assistance?</p>
+          <p>The answer is not available in the context. Would you like to use AI to answer this question?</p>
           <button onClick={() => handlePermissionResponse(true)}>Yes</button>
           <button onClick={() => handlePermissionResponse(false)}>No</button>
         </div>

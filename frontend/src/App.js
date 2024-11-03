@@ -1,4 +1,3 @@
-// App.js
 import React, { useState } from 'react';
 import UploadForm from './UploadForm';
 import Chat from './Chat';
@@ -13,11 +12,10 @@ function App() {
 
   return (
     <div className="app">
-      <header className='header'>
-        <img src = "" alt='logo'/>
+      <header className="header">
+        <img src="" alt="logo" />
         <UploadForm onUploadSuccess={handleUploadSuccess} />
       </header>
-      
       {uploadedFilePath && <Chat />}
     </div>
   );
