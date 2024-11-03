@@ -10,7 +10,7 @@ function Chat() {
     if (!question.trim()) return;
 
     try {
-      const response = await fetch(`https://pdf-chatbot-c0vj.onrender.com/ask?question=${encodeURIComponent(question)}`);
+      const response = await fetch(`https://pdf-chatbot-hhte.onrender.com/ask?question=${encodeURIComponent(question)}`);
       const result = await response.json();
 
       if (result.answer === "Answer is not available in the context.") {
@@ -34,7 +34,7 @@ function Chat() {
 
     if (permissionGranted) {
       try {
-        const response = await fetch(`https://pdf-chatbot-c0vj.onrender.com/ask?question=${encodeURIComponent(pendingQuestion)}&permission=true`);
+        const response = await fetch(`https://pdf-chatbot-hhte.onrender.com/ask?question=${encodeURIComponent(pendingQuestion)}&permission=true`);
         const result = await response.json();
 
         setChatHistory((prev) => [
