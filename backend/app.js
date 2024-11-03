@@ -1,17 +1,19 @@
+// Import necessary libraries
 import express from 'express';
 import http from 'http';
-import cors from 'cors';
 import { fileURLToPath } from 'url';
 import path, { dirname } from 'path';
+import cors from 'cors'
 import multer from 'multer';
 import dotenv from 'dotenv';
 import { FaissStore } from 'langchain/vectorstores/faiss';
 import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
-import { ChatGoogleGenerativeAI } from 'langchain/google-genai';
+import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { PromptTemplate } from 'langchain/prompts';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { ingestDocs } from './loader.js';
+import { ingestDocs } from './loader.js'; // Import the document ingestion function
 
+// Load environment variables from .env file
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -20,12 +22,16 @@ const app = express();
 const port = process.env.PORT || 3000;
 const server = http.createServer(app);
 
-// Enable CORS to allow requests from your frontend origin
-app.use(cors({
-  origin: '*', // Temporarily allow all origins for testing. Replace with your frontend URL after testing.
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  credentials: true,
-}));
+// Initialize Generative AI client for fallback
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY); // Replace `API_KEY` if needed
+const corsOptions = {
+  origin: 'https://pdf-chatbot-teal-mu.vercel.app', // Allow this origin
+  methods: ['GET', 'POST'], // Allow specific HTTP methods
+  credentials: true // Allow credentials (cookies, authorization headers, etc.)
+};
+
+// Use CORS middleware
+app.use(cors(corsOptions));
 
 // Set up storage for uploaded files
 const storage = multer.diskStorage({
