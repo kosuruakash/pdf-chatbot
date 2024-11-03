@@ -1,4 +1,3 @@
-// app.js
 import express from 'express';
 import http from 'http';
 import cors from 'cors';
@@ -13,7 +12,6 @@ import { PromptTemplate } from 'langchain/prompts';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { ingestDocs } from './loader.js';
 
-// Load environment variables from .env file
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -22,15 +20,12 @@ const app = express();
 const port = process.env.PORT || 3000;
 const server = http.createServer(app);
 
-// Enable CORS for requests from your frontend
+// Enable CORS to allow requests from your frontend origin
 app.use(cors({
   origin: 'https://pdf-chatbot-teal-mu.vercel.app', // Replace with your frontend URL
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
 }));
-
-// Initialize Generative AI client for fallback
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY);
 
 // Set up storage for uploaded files
 const storage = multer.diskStorage({
@@ -72,6 +67,7 @@ app.get('/ask', async (req, res) => {
       temperature: 0.3,
     });
 
+    // Define prompt template
     const promptTemplate = `
       Use the following context to answer the question as accurately as possible.
       Only use information from the context. If the answer is not in the context, respond with, "Answer is not available in the context."
@@ -87,6 +83,7 @@ app.get('/ask', async (req, res) => {
       inputVariables: ['context', 'question'],
     });
 
+    // Load embeddings and vector store
     const directory = path.join(__dirname, 'faiss_index');
     const embeddings = new GoogleGenerativeAIEmbeddings({
       apiKey: process.env.GOOGLE_GENAI_API_KEY,
@@ -95,8 +92,9 @@ app.get('/ask', async (req, res) => {
     const loadedVectorStore = await FaissStore.load(directory, embeddings);
     const retriever = loadedVectorStore.asRetriever();
 
+    // Retrieve relevant documents based on user question
     const userQuestion = req.query.question || 'How to compile a .tex file to a .pdf file';
-    const permission = req.query.permission === 'true';
+    const permission = req.query.permission === 'true'; // Get permission parameter
     const documents = await retriever.getRelevantDocuments(userQuestion);
 
     let answer;
@@ -112,6 +110,7 @@ app.get('/ask', async (req, res) => {
       }
     }
 
+    // If no relevant context is found and permission is granted, use generative AI fallback
     if ((!answer || answer === "Answer is not available in the context.") && permission) {
       console.log('Using Generative AI fallback...');
       const genModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
@@ -128,6 +127,7 @@ app.get('/ask', async (req, res) => {
   }
 });
 
+// Start the server
 server.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
