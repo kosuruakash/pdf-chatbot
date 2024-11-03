@@ -13,7 +13,7 @@ function UploadForm({ onUploadSuccess }) {
     formData.append('file', file);
 
     try {
-      const response = await fetch('https://pdf-chatbot-hhte.onrender.com.com/upload', {
+      const response = await fetch('https://pdf-chatbot-hhte.onrender.com/upload', {
         method: 'POST',
         body: formData,
       });
