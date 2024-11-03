@@ -22,7 +22,7 @@ const server = http.createServer(app);
 
 // Enable CORS to allow requests from your frontend origin
 app.use(cors({
-  origin: 'https://pdf-chatbot-teal-mu.vercel.app', // Replace with your frontend URL
+  origin: '*', // Temporarily allow all origins for testing. Replace with your frontend URL after testing.
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
 }));
